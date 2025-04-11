@@ -1,0 +1,16 @@
+1. Parsing:
+- "-?", help/usage
+- "-c", --count=NUMBER of packets
+- "--ttl=N" (N time to live) (nb of hops)
+- "-v", --verbose
+- "-W", --linger => nb of seconds to wait for response
+- "-p", --pattern=PATTERN
+- "-q", --quiet
+- "8.8.8.8" (dest) ou "ww"
+
+2. Initialise ICMP header and initialise buffer (modify with pattern if needed)
+- don't forget to create checksum() to check packet integrity
+
+3. Open a socket and initialise socket options (timeout and ttl)
+
+4. Send packet
