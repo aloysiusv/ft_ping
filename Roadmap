@@ -1,16 +1,32 @@
-1. Parsing:
-- "-?", help/usage
-- "-c", --count=NUMBER of packets
-- "--ttl=N" (N time to live) (nb of hops)
-- "-v", --verbose
-- "-W", --linger => nb of seconds to wait for response
-- "-p", --pattern=PATTERN
-- "-q", --quiet
-- "8.8.8.8" (dest) ou "ww"
+1. Ctrc-c
 
-2. Initialise ICMP header and initialise buffer (modify with pattern if needed)
-- don't forget to create checksum() to check packet integrity
+2. Init data:
+    => set hint (af_inet etc)
+    => echo_header (packet header type, id etc + CHECKSUM)
+        => checksum = packt + sizeof packet
 
-3. Open a socket and initialise socket options (timeout and ttl)
+3. Parsing options
 
-4. Send packet
+4. Init socket => socket, setsockopt
+
+5. Resolve addr
+    => getaddrinfo (the step where you check if the host exists)
+
+6. Print dest info
+    => inet_ntop, printf like ping
+
+7. Infinite loop:
+    => send_ping
+        => gettimeofday with struc timeval
+        => sendto() and recvfrom()
+        => ttl and rtt
+    => check response
+        => ICMP_ECHOREPLY, update rtt (sqr sum shit) and display ping info
+        => OR handle network errors (unreacheable, time exceeded etc)
+    => update_pkt
+        => increment seq and reset + redo checksum
+    => sleep (time)
+
+8. Clean exit 
+    => closing socket, freeaddrinfo, whatever was allocated
+    => display all stats
