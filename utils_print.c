@@ -6,19 +6,11 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:50 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/15 19:46:14 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/04/16 18:25:19 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
-
-void oops_crash(char* msg, char* try_help) {
-    
-	fprintf(stderr, "%s", msg);
-    if (try_help)
-        fprintf(stderr, "%s", try_help);
-    exit(EXIT_FAILURE);
-}
 
 void print_options(t_parser *options) { //debug
 	

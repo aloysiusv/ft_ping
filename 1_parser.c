@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:52:57 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/15 19:46:14 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/04/16 20:22:36 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,14 @@
 
 static void add_dest(t_parser *cli_args, char* dest) {
 	
-	if (cli_args->nb_dests >= MAX_D)
+	if (cli_args->nb_dests >= MAX_DEST)
 		oops_crash(E_MAX_DEST, NULL);
 
-    if (strlen(dest) >= MAX_D_SIZE)
+    if (strlen(dest) >= MAX_DEST_SIZE)
 		oops_crash(E_DEST_BIG, NULL);
 
-    strncpy(cli_args->dests[cli_args->nb_dests], dest, MAX_D_SIZE - 1);
-    cli_args->dests[cli_args->nb_dests][MAX_D_SIZE - 1] = '\0';
+    strncpy(cli_args->dests[cli_args->nb_dests], dest, MAX_DEST_SIZE - 1);
+    cli_args->dests[cli_args->nb_dests][MAX_DEST_SIZE - 1] = '\0';
     cli_args->nb_dests++;
 }
 
@@ -40,9 +40,7 @@ static void validate_opt(t_parser *options, int flag, char *arg) {
 	
 	__uint16_t val;
 
-	if ((options->flags & flag) == 0)
-		options->flags |= flag;
-	
+	options->flags |= flag;
 	if (arg) {
 		val = check_value(arg);
 		if (flag == OPT_COUNT)
@@ -66,12 +64,12 @@ void parse_args(int argc, char *argv[], t_parser *cli_args) {
 			}
 			else if (strcmp(argv[i], "-c") == 0) {
 				if (argv[i + 1] == NULL)
-					oops_crash(E_MISSING_ARG, E_TRYHELP);
+					oops_crash(E_MISSING_ARG, E_TRY_HELP);
 				validate_opt(cli_args, OPT_COUNT, argv[++i]);
 			}				
 			else if (strcmp(argv[i], "-W") == 0) {
 				if (argv[i + 1] == NULL) {
-					oops_crash(E_MISSING_ARG, E_TRYHELP);
+					oops_crash(E_MISSING_ARG, E_TRY_HELP);
 				validate_opt(cli_args, OPT_LINGER, argv[++i]); 
 			}
 			else if (strncmp(argv[i], "--ttl=", 6) == 0) {
@@ -81,7 +79,7 @@ void parse_args(int argc, char *argv[], t_parser *cli_args) {
 			}
 			else if (strcmp(argv[i], "-i") == 0) {
 				if (argv[i + 1] == NULL)
-					oops_crash(E_MISSING_ARG, E_TRYHELP);
+					oops_crash(E_MISSING_ARG, E_TRY_HELP);
 				validate_opt(cli_args, OPT_INTERVAL, argv[++i]);
 			}
 			else if (strcmp(argv[i], "-v") == 0)

@@ -6,7 +6,7 @@
 #    By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/14 16:40:45 by lrandria          #+#    #+#              #
-#    Updated: 2025/04/15 19:32:36 by lrandria         ###   ########.fr        #
+#    Updated: 2025/04/16 18:36:59 by lrandria         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,8 @@ NAME =	ft_ping
 SRCS =	0_main.c \
 		1_parser.c \
 		2_ping.c \
-		printer.c \
+		utils_print.c \
+		utils_stop.c \
 
 INC =	ft_ping.h \
 
