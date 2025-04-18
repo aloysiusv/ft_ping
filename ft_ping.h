@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:23 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/16 20:59:56 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/04/18 20:41:44 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,58 +38,35 @@
 # define OPT_COUNT		0b1
 # define OPT_TTL		0b10
 # define OPT_VERBOSE	0b100
-# define OPT_LINGER		0b1000
+# define OPT_TIMEOUT	0b1000
 # define OPT_INTERVAL	0b10000
 # define OPT_QUIET		0b100000
 
 # define MAX_DEST		10
-# define MAX_DEST_SIZE	256
-# define PACK_SIZE		64
-
 
 typedef struct {
-	uint16_t	flags;
-	uint16_t	nb_pkt;
-	uint16_t	ttl;
-	uint16_t	linger_time;
-	uint16_t	interval;
-	uint16_t	nb_dests;
-	char		dests[MAX_DEST][MAX_DEST_SIZE];
+	uint16_t	flags; //for options
+	uint16_t	nb_pkt; // number of packets to send
+	uint16_t	ttl; // timet-to-live
+	uint16_t	timeout; //timeout option
+	uint16_t	interval; // interval between pings
+	uint16_t	nb_dests; //number of dests
+	char		*dests[MAX_DEST];
 } t_parser;
 
 typedef struct {
-	int					sockfd;
-	struct addrinfo		*resolved;
-	struct addrinfo		hints;
-
-	struct sockaddr_in	addr;
-	socklen_t			addrlen;
-	
-	uint16_t			id;
-	uint16_t			seq;
-	struct timeval		start_time;
-} t_params;
-
-typedef struct {
-	struct icmphdr	header;
-	char			content[PACK_SIZE - sizeof(struct icmphdr)];
-} t_packet;
-
-typedef struct {
-	int		sent;
-	int		received;
-
-	double	min_time;
-	double	max_time;
-	double	total_time;
-	double	sum_sq_time; // for stddev
-
-	struct timeval begin; // For duration of the session
-} t_stats;
+	char *dest;           // host or IP
+    struct sockaddr_in addr;  // resolved address
+    int sockfd;
+    int id;
+    int seq;
+    struct timeval send_time;
+    struct timeval recv_time;
+} t_ping;
 
 void	parse_args(int argc, char *argv[], t_parser *cli_args);
 
-void	ping_loop(t_parser *cli_args, t_params *params, t_packet *pkt, t_stats *stats);
+void	ping_loop(t_parser *args);
 
 uint16_t checksum(void *ptr, int len);
 
