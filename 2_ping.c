@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 18:58:35 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/18 20:44:14 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/04/25 19:34:31 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,71 +14,70 @@
 
 extern volatile sig_atomic_t g_stop;
 
-// static void create_pack(t_params *params, t_packet *pkt) {
+static char *get_ip(struct addrinfo *resolved) {
 	
-//     pkt->header.type = ICMP_ECHO;
-//     pkt->header.code = 0;
-//     pkt->header.un.echo.id = getpid() & 0xFFFF;
-//     pkt->header.un.echo.sequence = params->seq;
-// 	pkt->header.checksum = 0; // reset for each address
-//     pkt->header.checksum = checksum(&pkt->header, sizeof(t_packet));
-// }
-
-// static void create_sock(t_parser *args, t_params *params) {
+	static char ip_addr[INET_ADDRSTRLEN];
+	struct sockaddr_in *tmp = (struct sockaddr_in *)resolved->ai_addr;
 	
-// 	struct timeval timeout; // timeout in caseof socket error
+	inet_ntop(AF_INET, &tmp->sin_addr, ip_addr, sizeof(ip_addr));
+	return ip_addr;
+}
 
-// 	timeout.tv_sec = 1;
-// 	timeout.tv_usec = 0;
+static t_packet init_packet(int i) {
 	
-// 	params->sockfd = socket(params->hints.ai_family,
-// 							params->hints.ai_socktype,
-// 							params->hints.ai_protocol);
-// 	if (params->sockfd < 0) {
-// 		freeaddrinfo(params->resolved);
-// 		oops_crash(E_INTERNAL_ERROR, NULL);
-// 	}
-
-// 	setsockopt(params->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-// 	setsockopt(params->sockfd, IPPROTO_IP, IP_TTL, &args->ttl, sizeof(args->ttl));
-// }
-
-// static void resolve_dest(char* dest, t_params *params) {
+	t_packet packet;
 	
-// 	memset(&params->hints, 0, sizeof(struct addrinfo));
-// 	params->hints.ai_family = AF_INET;
-// 	params->hints.ai_socktype = SOCK_RAW;
-// 	params->hints.ai_protocol = IPPROTO_ICMP;
+	memset(&packet, 0, sizeof(packet));
+	packet.type = ICMP_ECHO;
+	packet.code = 0;
+	packet.id = getpid() & 0xFFFF;
+	packet.seq = i;
+	packet.checksum = checksum(&packet, sizeof(packet));
+	return packet;
+}
 
-// 	if (getaddrinfo(dest, NULL, &params->hints, &params->resolved) != 0) {
-// 		freeaddrinfo(params->resolved);
-// 		oops_crash(E_BAD_DEST, NULL);
-// 	}
-// }
-
-void ping_loop(t_parser *args) {
+static int init_socket(t_parser *args) {
 	
-	for (int i = 0; i < args->nb_dests; i++) { \
-		t_ping instance;
-		memset(&instance, 0, sizeof(t_ping));
+	int ret = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	
+	if (ret < 0)
+		oops_crash(E_INTERNAL_ERROR, NULL);
+	setsockopt(ret, IPPROTO_IP, IP_TTL, &args->ttl, sizeof(args->ttl));
+	return ret;
+}
 
-		instance.dest = args->dests[i];
-		instance.id = getpid() & 0xFFFFl;
+static struct addrinfo *resolve_addr(char *dest) {
+	
+	struct addrinfo	hints;
+	struct addrinfo	*ret;
+	
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_RAW;
+    hints.ai_protocol = IPPROTO_ICMP;
+
+	if (getaddrinfo(dest, NULL, &hints, &ret) != 0)
+		oops_crash(E_BAD_DEST, NULL);
+	return ret;
+}
+
+void start_ping(t_parser *args, t_ping *ping) {
+
+	int					sockfd;
+	struct addrinfo		*resolved;
+	
+	sockfd = init_socket(args);
+	resolved = resolve_addr(args->dest);
+	ping->ip_dest = get_ip(resolved);
+	print_start_infos(args, ping);
+	
+	// Main loop
+	for (int i = 0; i != args->packet_count; i++) {
+		ping->packet = init_packet(i);
+		play_ping_pong(args, ping, sockfd, resolved);
+		sleep(args->interval);
+		if (g_stop == 1)
+			break;
 	}
-	// 	resolve_dest(args->dests[i], params);
-	// 	create_pack(params, pkt);
-	// 	create_sock(args, params);
-	// 	print_start_infos();
-	// 	if (g_stop == 0) {
-	// 		for (int j = 0; 1; ++j) { // infinite loop by default
-	// 			play_ping_pong();
-	// 			update_pack();
-	// 			sleep(args->interval);
-	// 			if (j == args->nb_pkt)
-	// 				break;
-	// 		}
-	// 	}
-	// 	else
-	// 		print_end_infos(stats);
-	// }
+	freeaddrinfo(resolved);
 }

@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:23 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/18 20:41:44 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/04/25 19:35:59 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,35 +42,61 @@
 # define OPT_INTERVAL	0b10000
 # define OPT_QUIET		0b100000
 
-# define MAX_DEST		10
+# define ICMP_HDR_SIZE	8
+# define IP_HDR_SIZE	20
+# define PAYLOAD_SIZE	56
+# define PACKET_SIZE	PAYLOAD_SIZE + ICMP_HDR_SIZE
+# define RESPONSE_SIZE	PACKET_SIZE + IP_HDR_SIZE
+
 
 typedef struct {
-	uint16_t	flags; //for options
-	uint16_t	nb_pkt; // number of packets to send
-	uint16_t	ttl; // timet-to-live
-	uint16_t	timeout; //timeout option
-	uint16_t	interval; // interval between pings
-	uint16_t	nb_dests; //number of dests
-	char		*dests[MAX_DEST];
+	int					flags; //for options
+	int					packet_count; // number of packets to send
+	int					ttl; // timet-to-live
+	int					timeout; //timeout option
+	int					interval; // interval between pings
+	int					dest_count; //number of dests
+	char				*dest;
 } t_parser;
 
 typedef struct {
-	char *dest;           // host or IP
-    struct sockaddr_in addr;  // resolved address
-    int sockfd;
-    int id;
-    int seq;
-    struct timeval send_time;
-    struct timeval recv_time;
+	// ICMP Header
+	uint8_t  			type;
+    uint8_t  			code;
+    uint16_t 			id;
+    uint16_t 			seq;
+    uint16_t 			checksum;
+
+	// Payload
+	char 				payload[PAYLOAD_SIZE];
+} t_packet;
+
+typedef struct {
+	t_packet			packet;
+	
+	char				*ip_dest;
+	
+	int					packets_sent;
+    int					packets_received;
+    int					packets_lost;
+
+    double				rtt_min;
+    double				rtt_max;
+    double				rtt_sum;
+    double				rtt_sum_sqr;   
 } t_ping;
 
-void	parse_args(int argc, char *argv[], t_parser *cli_args);
+// in the loop: sockfd, sent time, rcv time
 
-void	ping_loop(t_parser *args);
+void	parse_args(int ac, char *av[], t_parser *args);
+
+void	start_ping(t_parser *args, t_ping *ping);
+int 	play_ping_pong(t_parser *args, t_ping *ping, int sockfd, struct addrinfo *resolved);
 
 uint16_t checksum(void *ptr, int len);
 
-void	print_options(t_parser *options); //debug
+void	print_options(t_parser options); //debug
+void	print_start_infos( t_parser *args, t_ping *ping);
 void	print_help();
 
 void	oops_crash(char* msg, char* try_help);

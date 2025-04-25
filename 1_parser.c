@@ -6,18 +6,11 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:52:57 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/18 20:05:00 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/04/25 14:40:12 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
-
-static void add_dest(t_parser *args, char *new_dest) {
-	
-	if (args->nb_dests >= MAX_DEST)
-		oops_crash(E_MAX_DEST, NULL);
-	args->dests[args->nb_dests++] = new_dest;
-}
 
 static int check_value(const char *str) {
 
@@ -38,7 +31,7 @@ static void validate_opt(t_parser *options, int flag, char *arg) {
 	if (arg) {
 		val = check_value(arg);
 		if (flag == OPT_COUNT)
-			options->nb_pkt = val;
+			options->packet_count = val;
 		else if (flag == OPT_TIMEOUT)
 			options->timeout = val;
 		else if (flag == OPT_TTL)
@@ -49,6 +42,8 @@ static void validate_opt(t_parser *options, int flag, char *arg) {
 }
 
 void parse_args(int argc, char *argv[], t_parser *args) {
+
+	int found_dest = 0;
 
 	for (int i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
@@ -83,7 +78,11 @@ void parse_args(int argc, char *argv[], t_parser *args) {
 			else
 				oops_crash(E_WTF_OPT, NULL);
 			}
-		else
-        	add_dest(args, argv[i]);
+		else {
+			if (found_dest)
+				oops_crash(E_MAX_DEST, E_TRY_HELP);
+			found_dest = 1;
+        	args->dest = argv[i];
+		}
 	}
 }
