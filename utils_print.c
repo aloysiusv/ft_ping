@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:50 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/25 19:34:12 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/04/30 14:40:13 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,6 +62,55 @@ void print_start_infos( t_parser *args, t_ping *ping) {
 		printf("PING %s (%s): 56 data bytes\n", args->dest, ping->ip_dest);
 }
 
+void print_errors(int flags, int seq, char *buffer, ssize_t bytes) {
+    struct ip *ip_hdr = (struct ip *) buffer;
+    int ip_header_len = ip_hdr->ip_hl * 4;
+    struct icmphdr *icmp_hdr = (struct icmphdr *)(buffer + ip_header_len);
+    
+    if (icmp_hdr->type == ICMP_TIME_EXCEEDED)
+        printf("%ld bytes from %s: Time to live exceeded\n", bytes, inet_ntoa(ip_hdr->ip_src));
+    else if (icmp_hdr->type == ICMP_DEST_UNREACH)
+        printf("icmp_seq=%d Host Unreachable\n", seq);
+    else if (icmp_hdr->type == ICMP_REDIRECT)
+        printf("icmp_seq=%d Redirect Host\n", seq);
+    else if (icmp_hdr->type == ICMP_PARAMETERPROB)
+        printf("icmp_seq=%d Parameter problem\n", seq);
+    
+    if (flags & OPT_VERBOSE) {
+        printf("IP Hdr Dump:");
+        unsigned char *ptr = (unsigned char *)ip_hdr;
+        for (int i = 0; i < 20; i++) {
+            if (i % 6 == 0)
+                printf(" ");
+            printf("%02x", ptr[i]);
+        }
+        printf("\n");
+        printf("Vr HL TOS  Len   ID Flg  off TTL Pro  cks      Src    Dst\n");
+        printf("%x  %x  %02x %04x %04x   %x %04x %02x  %3d %04x %s %s\n",
+            ip_hdr->ip_v,
+            ip_hdr->ip_hl,
+            ip_hdr->ip_tos,
+            ntohs(ip_hdr->ip_len),
+            ntohs(ip_hdr->ip_id),
+            (ntohs(ip_hdr->ip_off) >> 13) & 0x7,
+            ntohs(ip_hdr->ip_off) & 0x1FFF,
+            ip_hdr->ip_ttl,
+            ip_hdr->ip_p,
+            ntohs(ip_hdr->ip_sum),
+            inet_ntoa(ip_hdr->ip_src),
+            inet_ntoa(ip_hdr->ip_dst)
+        );
+        printf("ICMP: type %d, code %d, size %ld, id 0x%04x, seq 0x%04x\n",
+            icmp_hdr->type,
+            icmp_hdr->code,
+            bytes - ip_header_len,
+            ntohs(icmp_hdr->un.echo.id),
+            ntohs(icmp_hdr->un.echo.sequence)
+        );
+    }
+}
+    
+    
 void print_end_infos() {
 	
 }

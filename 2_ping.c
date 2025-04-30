@@ -6,22 +6,13 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 18:58:35 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/25 19:34:31 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/04/30 12:42:20 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
 
 extern volatile sig_atomic_t g_stop;
-
-static char *get_ip(struct addrinfo *resolved) {
-	
-	static char ip_addr[INET_ADDRSTRLEN];
-	struct sockaddr_in *tmp = (struct sockaddr_in *)resolved->ai_addr;
-	
-	inet_ntop(AF_INET, &tmp->sin_addr, ip_addr, sizeof(ip_addr));
-	return ip_addr;
-}
 
 static t_packet init_packet(int i) {
 	
@@ -36,6 +27,30 @@ static t_packet init_packet(int i) {
 	return packet;
 }
 
+static char *get_ip(struct addrinfo *resolved) {
+	
+	static char ip_addr[INET_ADDRSTRLEN];
+	struct sockaddr_in *tmp = (struct sockaddr_in *)resolved->ai_addr;
+	
+	inet_ntop(AF_INET, &tmp->sin_addr, ip_addr, sizeof(ip_addr));
+	return ip_addr;
+}
+
+static struct addrinfo *resolve_addr(char *dest) {
+	
+	struct addrinfo	hints;
+	struct addrinfo	*resolved;
+	
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_RAW;
+    hints.ai_protocol = IPPROTO_ICMP;
+
+	if (getaddrinfo(dest, NULL, &hints, &resolved) != 0)
+		oops_crash(E_BAD_DEST, NULL);
+	return resolved;
+}
+
 static int init_socket(t_parser *args) {
 	
 	int ret = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
@@ -46,38 +61,21 @@ static int init_socket(t_parser *args) {
 	return ret;
 }
 
-static struct addrinfo *resolve_addr(char *dest) {
-	
-	struct addrinfo	hints;
-	struct addrinfo	*ret;
-	
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_RAW;
-    hints.ai_protocol = IPPROTO_ICMP;
-
-	if (getaddrinfo(dest, NULL, &hints, &ret) != 0)
-		oops_crash(E_BAD_DEST, NULL);
-	return ret;
-}
-
 void start_ping(t_parser *args, t_ping *ping) {
-
-	int					sockfd;
-	struct addrinfo		*resolved;
 	
-	sockfd = init_socket(args);
-	resolved = resolve_addr(args->dest);
-	ping->ip_dest = get_ip(resolved);
+	ping->sockfd = init_socket(args);
+	ping->resolved = resolve_addr(args->dest);
+	ping->ip_dest = get_ip(ping->resolved);
 	print_start_infos(args, ping);
 	
 	// Main loop
 	for (int i = 0; i != args->packet_count; i++) {
 		ping->packet = init_packet(i);
-		play_ping_pong(args, ping, sockfd, resolved);
+		if (play_ping_pong(args, ping) == -1)
+			ping->packets_lost++;
 		sleep(args->interval);
 		if (g_stop == 1)
 			break;
 	}
-	freeaddrinfo(resolved);
+	freeaddrinfo(ping->resolved);
 }

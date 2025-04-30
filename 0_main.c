@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:35 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/25 18:32:28 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/04/26 19:46:17 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ static void sig_handler(int sig) {
 
 static void init_default(t_parser *args) {
 	// DEFAULT VALUES
-	args->packet_count = -1; // necessary for the main loop
+	args->packet_count = -1; // necessary for infinite loop
 	args->interval = 1;
 	args->ttl = 64;
 }

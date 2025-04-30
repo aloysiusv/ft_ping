@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:23 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/25 19:35:59 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/04/30 14:20:44 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,10 @@
 #include <netinet/ip_icmp.h>
 #include <sys/time.h> 	// hints
 #include <netdb.h>		// timeval
+
+// FOR SELECT() AND ERRNO
+#include <errno.h>
+#include <sys/select.h>
 
 // FOR CTRL-C
 #include <signal.h>
@@ -55,7 +59,6 @@ typedef struct {
 	int					ttl; // timet-to-live
 	int					timeout; //timeout option
 	int					interval; // interval between pings
-	int					dest_count; //number of dests
 	char				*dest;
 } t_parser;
 
@@ -74,16 +77,16 @@ typedef struct {
 typedef struct {
 	t_packet			packet;
 	
+	int					sockfd;
 	char				*ip_dest;
-	
-	int					packets_sent;
-    int					packets_received;
+	struct addrinfo		*resolved;
+
     int					packets_lost;
 
     double				rtt_min;
     double				rtt_max;
     double				rtt_sum;
-    double				rtt_sum_sqr;   
+    double				rtt_sum_sqr;
 } t_ping;
 
 // in the loop: sockfd, sent time, rcv time
@@ -91,12 +94,13 @@ typedef struct {
 void	parse_args(int ac, char *av[], t_parser *args);
 
 void	start_ping(t_parser *args, t_ping *ping);
-int 	play_ping_pong(t_parser *args, t_ping *ping, int sockfd, struct addrinfo *resolved);
+int 	play_ping_pong(t_parser *args, t_ping *ping);
 
 uint16_t checksum(void *ptr, int len);
 
 void	print_options(t_parser options); //debug
 void	print_start_infos( t_parser *args, t_ping *ping);
+void 	print_errors(char *buffer, ssize_t bytes);
 void	print_help();
 
 void	oops_crash(char* msg, char* try_help);
