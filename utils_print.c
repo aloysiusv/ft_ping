@@ -6,37 +6,11 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:50 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/30 14:40:13 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/04/30 16:33:45 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
-
-// void print_options(t_parser *options) { //debug
-	
-// 	printf("Options:\n");
-// 	if (options->flags & OPT_COUNT) {
-// 		printf("Count: %d\n", options->packet_count);
-// 	}
-// 	if (options->flags & OPT_TTL) {
-// 		printf("TTL: %d\n", options->ttl);
-// 	}
-// 	if (options->flags & OPT_VERBOSE) {
-// 		printf("Verbose option is set.\n");
-// 	}
-// 	if (options->flags & OPT_TIMEOUT) {
-// 		printf("Timeout: %d\n", options->timeout);
-// 	}
-// 	if (options->flags & OPT_INTERVAL) {
-// 		printf("Interval: %d\n", options->interval);
-// 	}
-// 	if (options->flags & OPT_QUIET) {
-// 		printf("Quiet option is set.\n");
-// 	}
-// 	printf("Destinations:\n");
-// 	for (int i = 0; i < options->dest_count; ++i)
-// 		printf("=> %s\n", options->dest);
-// }
 
 void print_help() {
    
@@ -62,23 +36,30 @@ void print_start_infos( t_parser *args, t_ping *ping) {
 		printf("PING %s (%s): 56 data bytes\n", args->dest, ping->ip_dest);
 }
 
-void print_errors(int flags, int seq, char *buffer, ssize_t bytes) {
-    struct ip *ip_hdr = (struct ip *) buffer;
-    int ip_header_len = ip_hdr->ip_hl * 4;
-    struct icmphdr *icmp_hdr = (struct icmphdr *)(buffer + ip_header_len);
-    
-    if (icmp_hdr->type == ICMP_TIME_EXCEEDED)
-        printf("%ld bytes from %s: Time to live exceeded\n", bytes, inet_ntoa(ip_hdr->ip_src));
-    else if (icmp_hdr->type == ICMP_DEST_UNREACH)
-        printf("icmp_seq=%d Host Unreachable\n", seq);
-    else if (icmp_hdr->type == ICMP_REDIRECT)
-        printf("icmp_seq=%d Redirect Host\n", seq);
-    else if (icmp_hdr->type == ICMP_PARAMETERPROB)
-        printf("icmp_seq=%d Parameter problem\n", seq);
+void print_current_infos(t_ping *ping, int bytes, double rtt) {
+    printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n",
+        bytes - ping->ip_hdr_len,
+        ping->ip_dest,
+        ping->packet.seq,
+        ping->ip_hdr->ip_ttl,
+        rtt
+    );
+}
+
+void print_errors(t_ping *ping, int bytes, int flags) {
+
+    if (ping->icmp_hdr->type == ICMP_TIME_EXCEEDED)
+        printf("%d bytes from %s: Time to live exceeded\n", bytes, inet_ntoa(ping->ip_hdr->ip_src));
+    else if (ping->icmp_hdr->type == ICMP_DEST_UNREACH)
+        printf("icmp_seq=%d Host Unreachable\n", ping->packet.seq);
+    else if (ping->icmp_hdr->type == ICMP_REDIRECT)
+        printf("icmp_seq=%d Redirect Host\n", ping->packet.seq);
+    else if (ping->icmp_hdr->type == ICMP_PARAMETERPROB)
+        printf("icmp_seq=%d Parameter problem\n", ping->packet.seq);
     
     if (flags & OPT_VERBOSE) {
         printf("IP Hdr Dump:");
-        unsigned char *ptr = (unsigned char *)ip_hdr;
+        unsigned char *ptr = (unsigned char *)ping->ip_hdr;
         for (int i = 0; i < 20; i++) {
             if (i % 6 == 0)
                 printf(" ");
@@ -87,30 +68,37 @@ void print_errors(int flags, int seq, char *buffer, ssize_t bytes) {
         printf("\n");
         printf("Vr HL TOS  Len   ID Flg  off TTL Pro  cks      Src    Dst\n");
         printf("%x  %x  %02x %04x %04x   %x %04x %02x  %3d %04x %s %s\n",
-            ip_hdr->ip_v,
-            ip_hdr->ip_hl,
-            ip_hdr->ip_tos,
-            ntohs(ip_hdr->ip_len),
-            ntohs(ip_hdr->ip_id),
-            (ntohs(ip_hdr->ip_off) >> 13) & 0x7,
-            ntohs(ip_hdr->ip_off) & 0x1FFF,
-            ip_hdr->ip_ttl,
-            ip_hdr->ip_p,
-            ntohs(ip_hdr->ip_sum),
-            inet_ntoa(ip_hdr->ip_src),
-            inet_ntoa(ip_hdr->ip_dst)
+            ping->ip_hdr->ip_v,
+            ping->ip_hdr->ip_hl,
+            ping->ip_hdr->ip_tos,
+            ntohs(ping->ip_hdr->ip_len),
+            ntohs(ping->ip_hdr->ip_id),
+            (ntohs(ping->ip_hdr->ip_off) >> 13) & 0x7,
+            ntohs(ping->ip_hdr->ip_off) & 0x1FFF,
+            ping->ip_hdr->ip_ttl,
+            ping->ip_hdr->ip_p,
+            ntohs(ping->ip_hdr->ip_sum),
+            inet_ntoa(ping->ip_hdr->ip_src),
+            inet_ntoa(ping->ip_hdr->ip_dst)
         );
-        printf("ICMP: type %d, code %d, size %ld, id 0x%04x, seq 0x%04x\n",
-            icmp_hdr->type,
-            icmp_hdr->code,
-            bytes - ip_header_len,
-            ntohs(icmp_hdr->un.echo.id),
-            ntohs(icmp_hdr->un.echo.sequence)
+        printf("ICMP: type %d, code %d, size %d, id 0x%04x, seq 0x%04x\n",
+            ping->icmp_hdr->type,
+            ping->icmp_hdr->code,
+            bytes - ping->ip_hdr_len,
+            ntohs(ping->icmp_hdr->un.echo.id),
+            ntohs(ping->icmp_hdr->un.echo.sequence)
         );
     }
 }
     
-    
-void print_end_infos() {
-	
+void print_end_infos(t_ping *ping) {
+    // double mean = ping->rtt_sum / ping->rtt_count;
+    // double stddev = sqrt((ping->rtt_sqr_sum / ping->rtt_count) - pow(mean, 2));
+    // int loss = 100 - (((ping->seq + 1) - ping->errors) /(ping->seq + 1)) * 100;
+    // if (loss == 100)
+    //     mean = stddev = 0;
+    (void)ping;
+    printf("\n--- ft_ping statistics ---\n");
+    // printf("%d packets transmitted, %d packets received, %d%% packet loss\n", ping->rtt_count + ping->errors, ping->rtt_count, loss);
+    // printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", ping->rtt_min, mean, ping->rtt_max, stddev);
 }

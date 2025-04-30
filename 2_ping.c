@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 18:58:35 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/30 12:42:20 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/04/30 17:00:29 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,8 +74,10 @@ void start_ping(t_parser *args, t_ping *ping) {
 		if (play_ping_pong(args, ping) == -1)
 			ping->packets_lost++;
 		sleep(args->interval);
-		if (g_stop == 1)
+		if (g_stop == 1) {
 			break;
+		}
 	}
+	print_end_infos(ping);
 	freeaddrinfo(ping->resolved);
 }

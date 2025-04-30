@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:23 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/30 14:20:44 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/04/30 17:28:38 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,16 +80,19 @@ typedef struct {
 	int					sockfd;
 	char				*ip_dest;
 	struct addrinfo		*resolved;
-
-    int					packets_lost;
+	
+	char 				buffer[RESPONSE_SIZE];
+	struct ip 			*ip_hdr;
+	int 				ip_hdr_len;
+	struct icmphdr 		*icmp_hdr;
+    
+	int					packets_lost;
 
     double				rtt_min;
     double				rtt_max;
     double				rtt_sum;
     double				rtt_sum_sqr;
 } t_ping;
-
-// in the loop: sockfd, sent time, rcv time
 
 void	parse_args(int ac, char *av[], t_parser *args);
 
@@ -98,9 +101,10 @@ int 	play_ping_pong(t_parser *args, t_ping *ping);
 
 uint16_t checksum(void *ptr, int len);
 
-void	print_options(t_parser options); //debug
 void	print_start_infos( t_parser *args, t_ping *ping);
-void 	print_errors(char *buffer, ssize_t bytes);
+void	print_current_infos(t_ping *ping, int bytes, double rtt);
+void 	print_end_infos(t_ping *ping);
+void	print_errors(t_ping *ping, int bytes, int flags);
 void	print_help();
 
 void	oops_crash(char* msg, char* try_help);
