@@ -6,19 +6,25 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 18:35:54 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/30 17:39:40 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/01 22:34:27 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
 
-static int receive_pong(t_ping *ping, char *buffer) {
+static int receive_pong(int sockfd, t_response *rsp) {
     
     int ret;
     struct sockaddr_in recv_addr;
     socklen_t recv_len = sizeof(recv_addr);
     
-    ret = recvfrom(ping->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&recv_addr, &recv_len);
+    memset(rsp, 0, sizeof(t_response));
+    ret = recvfrom(sockfd, rsp->buffer, RESPONSE_SIZE, 0, (struct sockaddr *)&recv_addr, &recv_len);
+    
+    // Parse response headers
+    rsp->ip_hdr = (struct iphdr *)rsp->buffer;
+    rsp->ip_hdr_len = rsp->ip_hdr->ihl * 4;
+    rsp->icmp_hdr = (struct icmphdr *)(rsp->buffer + rsp->ip_hdr_len);
     return ret;
 }
 
@@ -53,30 +59,24 @@ int play_ping_pong(t_parser *args, t_ping *ping) {
     // Start clock and send ICMP request
     gettimeofday(&start, NULL);
     ret_send = send_ping(args, ping, ping->resolved);
-    ret_rcv = receive_pong(ping, ping->buffer);
+    ret_rcv = receive_pong(ping->sockfd, &ping->response);
     if (ret_send <= 0 || ret_rcv <= 0)
         return -1;
     gettimeofday(&end, NULL);
-    
-    // Parse headers
-    ping->ip_hdr = (struct ip *)ping->buffer;
-    ping->ip_hdr_len = ping->ip_hdr->ip_hl << 2;
-    ping->icmp_hdr = (struct icmphdr *)(ping->buffer + ping->ip_hdr_len);
 
-    // Validate ICMP response
-    if (ping->icmp_hdr->type == ICMP_ECHOREPLY) {
+    // Check if we have the "success" header
+    if (ping->response.icmp_hdr->type == ICMP_ECHOREPLY) {
 	    double rtt = (end.tv_sec - start.tv_sec) * 1000.0 +
 	             (double)(end.tv_usec - start.tv_usec) / 1000.0;
 
 	    if (!(args->flags & OPT_QUIET))
-		    print_current_infos(ping, ret_rcv, rtt);
+		    print_current_infos(ping, &ping->response, ret_rcv, rtt);
 
 	    // Update RTT stats
 	    if (rtt < ping->rtt_min || ping->rtt_min == 0.0)
 		    ping->rtt_min = rtt;
 	    if (rtt > ping->rtt_max)
 		    ping->rtt_max = rtt;
-
 	    ping->rtt_sum += rtt;
 	    ping->rtt_sum_sqr += rtt * rtt;
     } 

@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:23 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/30 17:28:38 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/01 22:03:02 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,19 +75,22 @@ typedef struct {
 } t_packet;
 
 typedef struct {
+	char 				buffer[RESPONSE_SIZE];
+	struct iphdr 		*ip_hdr;
+	int 				ip_hdr_len;
+	struct icmphdr 		*icmp_hdr;
+} t_response;
+
+typedef struct {
 	t_packet			packet;
+	t_response			response;
 	
 	int					sockfd;
 	char				*ip_dest;
 	struct addrinfo		*resolved;
-	
-	char 				buffer[RESPONSE_SIZE];
-	struct ip 			*ip_hdr;
-	int 				ip_hdr_len;
-	struct icmphdr 		*icmp_hdr;
     
+	// Stats
 	int					packets_lost;
-
     double				rtt_min;
     double				rtt_max;
     double				rtt_sum;
@@ -101,12 +104,12 @@ int 	play_ping_pong(t_parser *args, t_ping *ping);
 
 uint16_t checksum(void *ptr, int len);
 
-void	print_start_infos( t_parser *args, t_ping *ping);
-void	print_current_infos(t_ping *ping, int bytes, double rtt);
-void 	print_end_infos(t_ping *ping);
-void	print_errors(t_ping *ping, int bytes, int flags);
+void	print_start_infos(const t_parser *args, const t_ping *ping);
+void	print_current_infos(const t_ping *ping, const t_response *rsp, const int bytes, double rtt);
+void 	print_end_infos(const t_ping *ping);
+void	print_errors(t_ping *ping, const int bytes, const int flags);
 void	print_help();
 
-void	oops_crash(char* msg, char* try_help);
+void	oops_crash(const char* msg, const char* try_help);
 
 #endif

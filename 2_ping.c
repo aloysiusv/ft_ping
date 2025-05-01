@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 18:58:35 by lrandria          #+#    #+#             */
-/*   Updated: 2025/04/30 17:00:29 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/01 19:28:10 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,7 @@ static int init_socket(t_parser *args) {
 
 void start_ping(t_parser *args, t_ping *ping) {
 	
+	// Preparing socket and dest address
 	ping->sockfd = init_socket(args);
 	ping->resolved = resolve_addr(args->dest);
 	ping->ip_dest = get_ip(ping->resolved);

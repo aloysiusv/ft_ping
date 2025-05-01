@@ -6,7 +6,7 @@
 #    By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/14 16:40:45 by lrandria          #+#    #+#              #
-#    Updated: 2025/04/25 19:24:53 by lrandria         ###   ########.fr        #
+#    Updated: 2025/05/01 22:18:46 by lrandria         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,7 +23,7 @@ SRCS =	0_main.c \
 INC =	ft_ping.h \
 
 CC = gcc
-FLAGS = -Wall -Wextra -Werror -g -fsanitize=address
+FLAGS = -Wall -Wextra -Werror
 LDFLAGS = -lm
 
 OBJ = $(addprefix $(OBJ_DIR), $(SRCS:.$(SRCS_EXT)=.o))
