@@ -6,7 +6,7 @@
 #    By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/14 16:40:45 by lrandria          #+#    #+#              #
-#    Updated: 2025/05/01 22:18:46 by lrandria         ###   ########.fr        #
+#    Updated: 2025/05/02 16:22:13 by lrandria         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -46,7 +46,7 @@ vpath    %.d $(DEP_DIR)
 all: $(OBJ_DIR) $(DEP_DIR) $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(FLAGS) $(LDFLAGS) $^ -o $@
+	$(CC) $(FLAGS) $^ -o $@ $(LDFLAGS)
 
 clean: clean_dep clean_obj
 

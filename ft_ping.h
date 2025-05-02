@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:23 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/01 22:03:02 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/02 16:17:20 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,9 @@
 
 // FOR CTRL-C
 #include <signal.h>
+
+// FOR SQRT (calculating final stats)
+#include <math.h>
 
 #include "errors.h"
 
@@ -91,6 +94,7 @@ typedef struct {
     
 	// Stats
 	int					packets_lost;
+	int					packets_sent;
     double				rtt_min;
     double				rtt_max;
     double				rtt_sum;
@@ -106,7 +110,7 @@ uint16_t checksum(void *ptr, int len);
 
 void	print_start_infos(const t_parser *args, const t_ping *ping);
 void	print_current_infos(const t_ping *ping, const t_response *rsp, const int bytes, double rtt);
-void 	print_end_infos(const t_ping *ping);
+void 	print_end_infos(const t_ping *ping, char *dest);
 void	print_errors(t_ping *ping, const int bytes, const int flags);
 void	print_help();
 
