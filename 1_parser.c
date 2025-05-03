@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:52:57 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/03 13:07:05 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/03 15:30:28 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,10 @@ static int check_value(const char *str) {
     long val;
 
     val = strtol(str, &endptr, 10);
-    if (endptr == str || *endptr != '\0' || val > __UINT16_MAX__ || val < 0)
-        oops_crash(E_BAD_VALUE, NULL);
+    if (endptr == str || *endptr != '\0' || val > __UINT16_MAX__)
+        oops_crash(E_BAD_VALUE, str);
+    if (val < 0)
+        oops_crash(E_TOO_SMALL, str); // Not accepting val < 0 is a personal choice. Ping has undefined behaviour.
     return (uint16_t)val;
 }
 
@@ -27,15 +29,18 @@ static void validate_opt(t_parser *options, int flag, char *arg) {
     
     uint16_t val;
 
-    options->flags |= flag;
+    options->flags |= flag; // Setting the flag to '1'
     if (arg) {
         val = check_value(arg);
         if (flag == OPT_COUNT)
             options->packet_count = val;
         else if (flag == OPT_LINGER)
             options->linger = val;
-        else if (flag == OPT_TTL)
+        else if (flag == OPT_TTL) {
+            if (val > 255)
+                oops_crash(E_TOO_BIG, arg);
             options->ttl = val;
+        }
         else if (flag == OPT_INTERVAL)
             options->interval = val;
     }
@@ -62,7 +67,7 @@ void parse_args(int argc, char *argv[], t_parser *args) {
                 validate_opt(args, OPT_LINGER, argv[++i]); 
             }
             else if (strncmp(argv[i], "--ttl=", 6) == 0) {
-                if ((strcmp(argv[i], "--ttl=") ==0 ) || (strcmp(argv[i], "--ttl=0") == 0))
+                if (strcmp(argv[i], "--ttl=") == 0 )
                     oops_crash(E_TOO_SMALL, NULL) ;
                 validate_opt(args, OPT_TTL, argv[i] + 6);
             }
@@ -76,7 +81,7 @@ void parse_args(int argc, char *argv[], t_parser *args) {
             else if (strcmp(argv[i], "-q") == 0)
                 validate_opt(args, OPT_QUIET, NULL);
             else
-                oops_crash(E_WTF_OPT, NULL);
+                oops_crash(E_WTF_OPT, argv[i]);
             }
         else {
             if (found_dest)

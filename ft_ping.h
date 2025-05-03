@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:23 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/03 13:16:13 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/03 17:44:22 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,16 +37,17 @@
 #include <math.h>
 
 // ERRORS MSG
-# define E_NOT_SUDO         "ft_ping: Are you sudo...?\n"
-# define E_MISSING_DEST     "ft_ping: missing host operand\n"
-# define E_BAD_DEST         "ft_ping: unknown host\n"
-# define E_MAX_DEST         "ft_ping: only one destination needed\n"
-# define E_MISSING_ARG      "ft_ping: option requires an argument\n"
-# define E_BAD_VALUE        "ft_ping: invalid value\n"
-# define E_TOO_SMALL        "ft_ping: option value too small\n"
-# define E_WTF_OPT          "ft_ping: unrecognised option\n"
-# define E_INTERNAL_ERROR   "ft_ping: internal error\n"
-# define E_TRY_HELP         "Try 'ft_ping -?', 'ft_ping --help' or 'ft_ping --usage' for more information\n"
+# define E_NOT_SUDO         "ft_ping: Are you sudo...?"
+# define E_MISSING_DEST     "ft_ping: missing host operand"
+# define E_BAD_DEST         "ft_ping: unknown host"
+# define E_MAX_DEST         "ft_ping: only one destination needed"
+# define E_MISSING_ARG      "ft_ping: option requires an argument"
+# define E_BAD_VALUE        "ft_ping: invalid value: "
+# define E_TOO_SMALL        "ft_ping: option value too small: "
+# define E_TOO_BIG          "ft_ping: option value too big: "
+# define E_WTF_OPT          "ft_ping: unrecognised option: "
+# define E_INTERNAL_ERROR   "ft_ping: internal error"
+# define E_TRY_HELP         "\nTry 'ft_ping -?', 'ft_ping --help' or 'ft_ping --usage' for more information"
 
 // BITWISE FLAGS FOR OPTIONS
 # define OPT_COUNT      0b1
@@ -76,9 +77,9 @@ typedef struct {
     // ICMP Header
     uint8_t  			type;
     uint8_t  			code;
+    uint16_t 			checksum;
     uint16_t 			id;
     uint16_t 			seq;
-    uint16_t 			checksum;
 
     char                payload[PAYLOAD_SIZE];
 } t_packet;
@@ -113,7 +114,7 @@ void	start_ping(t_parser *args, t_ping *ping);
 int 	play_ping_pong(t_parser *args, t_ping *ping);
 
 void	print_start_infos(const t_parser *args, const t_ping *ping);
-void	print_current_infos(const t_ping *ping, const t_response *rsp, const int bytes, double rtt);
+void	print_response_infos(const t_response *rsp, const int bytes, double rtt);
 void 	print_end_infos(const t_ping *ping, char *dest);
 void	print_errors(t_ping *ping, const int bytes, const int flags);
 void	print_help();

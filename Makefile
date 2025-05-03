@@ -6,7 +6,7 @@
 #    By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/14 16:40:45 by lrandria          #+#    #+#              #
-#    Updated: 2025/05/03 11:06:57 by lrandria         ###   ########.fr        #
+#    Updated: 2025/05/03 15:12:22 by lrandria         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,7 +22,7 @@ INC =	ft_ping.h \
 
 CC = gcc
 FLAGS = -Wall -Wextra -Werror
-LDFLAGS = -lm
+LINKER_FLAGS = -lm # For libm, the math library
 
 OBJ = $(addprefix $(OBJ_DIR), $(SRCS:.$(SRCS_EXT)=.o))
 DEP = $(addprefix $(DEP_DIR), $(SRCS:.$(SRCS_EXT)=.d))
@@ -44,7 +44,7 @@ vpath    %.d $(DEP_DIR)
 all: $(OBJ_DIR) $(DEP_DIR) $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(FLAGS) $^ -o $@ $(LDFLAGS)
+	$(CC) $(FLAGS) $^ -o $@ $(LINKER_FLAGS)
 
 clean: clean_dep clean_obj
 

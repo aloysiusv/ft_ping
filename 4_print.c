@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 10:50:43 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/03 14:24:11 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/03 17:47:45 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,27 +23,31 @@ void print_help() {
 					"   -W,                        (linger) number of seconds to wait for response\n"
 					"   -v,                        verbose output\n"
 					"   -q,                        quiet output\n"
-					"   -?, --help OR --usage      give this help list\n");
+					"   -?, --help OR --usage      display this help list\n");
 }
 
 void print_start_infos(const  t_parser *args, const t_ping *ping) {
 
 	if (args->flags & OPT_VERBOSE) {
 		int packet_id = getpid() & 0xFFFF;
-		printf("PING %s (%s): 56 data bytes, id 0x%x = %d\n", args->dest, ping->ip_dest, packet_id, packet_id);
+		printf("PING %s (%s): %d data bytes, id 0x%x = %d\n", args->dest, ping->ip_dest, PAYLOAD_SIZE, packet_id, packet_id);
 	}
 	else
-		printf("PING %s (%s): 56 data bytes\n", args->dest, ping->ip_dest);
+		printf("PING %s (%s): %d data bytes\n", args->dest, ping->ip_dest, PAYLOAD_SIZE);
 }
 
-void print_current_infos(const t_ping *ping, const t_response *rsp, const int bytes, const double rtt) {
-	printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n",
-		bytes - rsp->ip_hdr_len,
-		ping->ip_dest,
-		ping->packet.seq,
-		rsp->ip_hdr->ttl,
-		rtt
-	);
+void print_response_infos(const t_response *rsp, const int bytes, const double rtt) {
+
+	char ip_addr[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &rsp->ip_hdr->saddr, ip_addr, sizeof(ip_addr));
+
+    printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n",
+        bytes - rsp->ip_hdr_len,
+        ip_addr,
+        rsp->icmp_hdr->un.echo.sequence,
+        rsp->ip_hdr->ttl,
+        rtt
+    );
 }
 
 void print_errors(t_ping *ping, const int bytes,const int flags) {

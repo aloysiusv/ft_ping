@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 10:50:35 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/03 12:15:29 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/03 17:26:01 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,11 +65,11 @@ int play_ping_pong(t_parser *args, t_ping *ping) {
 
     // Check if we have the "success" header
     parse_headers(&ping->response);
-    if (ping->response.icmp_hdr->type == ICMP_ECHOREPLY || ping->response.icmp_hdr->type == ICMP_ECHO) {
+    if (ping->response.icmp_hdr->type == ICMP_ECHOREPLY) {
 	    double rtt = (end.tv_sec - start.tv_sec) * 1000.0 + (double)(end.tv_usec - start.tv_usec) / 1000.0;
 
 	    if (!(args->flags & OPT_QUIET))
-		    print_current_infos(ping, &ping->response, ret_rcv, rtt);
+		    print_response_infos(&ping->response, ret_rcv, rtt);
 
 	    // Update RTT stats
 	    if (rtt < ping->rtt_min || ping->rtt_min == 0.0)
