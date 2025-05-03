@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils_print.c                                      :+:      :+:    :+:   */
+/*   4_print.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/04/14 16:40:50 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/02 16:24:24 by lrandria         ###   ########.fr       */
+/*   Created: 2025/05/03 10:50:43 by lrandria          #+#    #+#             */
+/*   Updated: 2025/05/03 14:24:11 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ void print_help() {
 					"   -c,                        (count) stop after sending X packets\n"
 					"   -i,                        (interval) wait X seconds between sending each packet\n"
 					"   --ttl=N                    specify N as time-to-live\n"
-					"   -w,                        stop after X seconds\n"
+					"   -W,                        (linger) number of seconds to wait for response\n"
 					"   -v,                        verbose output\n"
 					"   -q,                        quiet output\n"
 					"   -?, --help OR --usage      give this help list\n");
@@ -53,11 +53,7 @@ void print_errors(t_ping *ping, const int bytes,const int flags) {
 	if (rsp->icmp_hdr->type == ICMP_TIME_EXCEEDED)
 		printf("%d bytes from %s: Time to live exceeded\n", bytes - rsp->ip_hdr_len, inet_ntoa((struct in_addr){rsp->ip_hdr->saddr}));
 	else if (rsp->icmp_hdr->type == ICMP_DEST_UNREACH)
-		printf("icmp_seq=%d Host Unreachable\n", ping->packet.seq);
-	else if (rsp->icmp_hdr->type == ICMP_REDIRECT)
-		printf("icmp_seq=%d Redirect Host\n", ping->packet.seq);
-	else if (rsp->icmp_hdr->type == ICMP_PARAMETERPROB)
-		printf("icmp_seq=%d Parameter problem\n", ping->packet.seq);
+		printf("%d bytes from %s: Destination Host Unreachable\n", bytes - rsp->ip_hdr_len, inet_ntoa((struct in_addr){rsp->ip_hdr->saddr}));
 	
 	if (flags & OPT_VERBOSE) {
 		// Parse the second IP header (you get two when getting an error)
@@ -65,8 +61,8 @@ void print_errors(t_ping *ping, const int bytes,const int flags) {
 
 		// Check response size, in case it's a bad header
 		if ((uint8_t *)inner_ip - (uint8_t *)rsp->buffer + sizeof(struct iphdr) <= RESPONSE_SIZE) {
-			const uint8_t *buf = (const uint8_t *)inner_ip;
-			int inner_ip_len = inner_ip->ihl * 4;
+			const uint8_t  *buf = (const uint8_t *)inner_ip;
+			int            inner_ip_len = inner_ip->ihl * 4;
 			
 			// Get src and dst properly
 			char src[INET_ADDRSTRLEN];
@@ -104,15 +100,15 @@ void print_errors(t_ping *ping, const int bytes,const int flags) {
 		}
 	}
 }
-	
+
 void print_end_infos(const t_ping *ping, char *dest) {
 	
-	int total_packets = ping->packets_sent + ping->packets_lost;
-	double mean = ping->rtt_sum / total_packets;
-	double stddev = sqrt((ping->rtt_sum_sqr / total_packets) - pow(mean, 2));
-	int loss = ping->packets_lost / total_packets * 100;
+	int     total_packets = ping->packets_sent + ping->packets_lost;
+	double  mean = ping->rtt_sum / total_packets;
+	double  stddev = sqrt((ping->rtt_sum_sqr / total_packets) - pow(mean, 2));
+	int     loss = ping->packets_lost / total_packets * 100;
 
-	printf("\n--- %s ft_ping statistics ---\n", dest);
+	printf("--- %s ft_ping statistics ---\n", dest);
 	printf("%d packets transmitted, %d packets received, %d%% packet loss\n", total_packets, ping->packets_sent, loss);
 	if (loss != 100)
 		printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n",ping->rtt_min, mean, ping->rtt_max, stddev);
