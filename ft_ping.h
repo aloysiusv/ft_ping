@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:23 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/03 17:44:22 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/05 11:17:08 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,21 +33,23 @@
 // FOR CTRL-C
 #include <signal.h>
 
-// FOR SQRT (calculating final stats)
+// FOR CALCULATING STATS
 #include <math.h>
 
 // ERRORS MSG
-# define E_NOT_SUDO         "ft_ping: Are you sudo...?"
-# define E_MISSING_DEST     "ft_ping: missing host operand"
-# define E_BAD_DEST         "ft_ping: unknown host"
-# define E_MAX_DEST         "ft_ping: only one destination needed"
-# define E_MISSING_ARG      "ft_ping: option requires an argument"
-# define E_BAD_VALUE        "ft_ping: invalid value: "
-# define E_TOO_SMALL        "ft_ping: option value too small: "
-# define E_TOO_BIG          "ft_ping: option value too big: "
-# define E_WTF_OPT          "ft_ping: unrecognised option: "
-# define E_INTERNAL_ERROR   "ft_ping: internal error"
-# define E_TRY_HELP         "\nTry 'ft_ping -?', 'ft_ping --help' or 'ft_ping --usage' for more information"
+# define E_NOT_SUDO          "ft_ping: Are you sudo...?"
+# define E_MISSING_DEST      "ft_ping: missing host operand"
+# define E_BAD_DEST          "ft_ping: unknown host"
+# define E_MAX_DEST          "ft_ping: only one destination needed"
+# define E_MISSING_ARG       "ft_ping: option requires an argument"
+# define E_BAD_VALUE         "ft_ping: invalid value: "
+# define E_TOO_SMALL         "ft_ping: option value too small: "
+# define E_TOO_BIG           "ft_ping: option value too big: "
+# define E_WTF_OPT           "ft_ping: unrecognised option: "
+# define E_SOCK_ERROR        "ft_ping: 'socket()' error"
+# define E_SETSOCKOPT_ERROR  "ft_ping: 'setsockopt()' error"
+# define E_INTERNAL_ERROR    "ft_ping: internal error"
+# define E_TRY_HELP          "\nTry 'ft_ping -?', 'ft_ping --help' or 'ft_ping --usage' for more information"
 
 // BITWISE FLAGS FOR OPTIONS
 # define OPT_COUNT      0b1

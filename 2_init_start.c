@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 11:06:43 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/03 17:57:14 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/05 11:25:58 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,16 +40,20 @@ static t_packet init_packet(int i) {
     return packet;
 }
 
-static char *get_ip(struct addrinfo *resolved) {
+static char *get_ip(struct addrinfo *resolved, int sock) {
     
     static char         ip_addr[INET_ADDRSTRLEN];
     struct sockaddr_in  *tmp = (struct sockaddr_in *)resolved->ai_addr;
     
-    inet_ntop(AF_INET, &tmp->sin_addr, ip_addr, sizeof(ip_addr));
+    if (inet_ntop(AF_INET, &tmp->sin_addr, ip_addr, sizeof(ip_addr)) == NULL) {
+        close(sock);
+        freeaddrinfo(resolved);
+        oops_crash(E_BAD_DEST, NULL);
+    }   
     return ip_addr;
 }
 
-static struct addrinfo *resolve_addr(char *dest) {
+static struct addrinfo *resolve_addr(char *dest, int sock) {
     
     struct addrinfo hints;
     struct addrinfo *resolved;
@@ -59,8 +63,10 @@ static struct addrinfo *resolve_addr(char *dest) {
     hints.ai_socktype = SOCK_RAW;
     hints.ai_protocol = IPPROTO_ICMP;
 
-    if (getaddrinfo(dest, NULL, &hints, &resolved) != 0)
+    if (getaddrinfo(dest, NULL, &hints, &resolved) != 0) {
+        close(sock);
         oops_crash(E_BAD_DEST, NULL);
+    }
     return resolved;
 }
 
@@ -69,10 +75,10 @@ static int init_socket(t_parser *args) {
     int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     
     if (sockfd < 0)
-        oops_crash(E_INTERNAL_ERROR, NULL);
+        oops_crash(E_SOCK_ERROR, NULL);
     if (setsockopt(sockfd, IPPROTO_IP, IP_TTL, &args->ttl, sizeof(args->ttl)) < 0) {
         close(sockfd);
-        oops_crash(E_INTERNAL_ERROR, NULL);
+        oops_crash(E_SETSOCKOPT_ERROR, NULL);
     }
     return sockfd;
 }
@@ -80,9 +86,9 @@ static int init_socket(t_parser *args) {
 void start_ping(t_parser *args, t_ping *ping) {
     
     // Preparing socket and dest address
-    ping->resolved = resolve_addr(args->dest);
-    ping->ip_dest = get_ip(ping->resolved);
     ping->sockfd = init_socket(args);
+    ping->resolved = resolve_addr(args->dest, ping->sockfd);
+    ping->ip_dest = get_ip(ping->resolved, ping->sockfd);
     print_start_infos(args, ping);
     
     // Main loop
