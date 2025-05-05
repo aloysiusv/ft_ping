@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:52:57 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/05 11:17:57 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/05 11:45:52 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ static int check_value(const char *str) {
     if (endptr == str || *endptr != '\0' || val > __UINT16_MAX__)
         oops_crash(E_BAD_VALUE, str);
     if (val <= 0)
-        oops_crash(E_TOO_SMALL, str); // Not accepting val <= 0 is a personal choice. Ping has undefined behaviour.
+        oops_crash(E_TOO_SMALL, str); // Not accepting val <= 0 is a personal choice. Ping has undefined behaviour (except for ttl, for which it's "too big").
     return (uint16_t)val;
 }
 
