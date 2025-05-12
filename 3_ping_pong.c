@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 10:50:35 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/03 17:26:01 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/12 18:16:23 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,23 +65,25 @@ int play_ping_pong(t_parser *args, t_ping *ping) {
 
     // Check if we have the "success" header
     parse_headers(&ping->response);
-    if (ping->response.icmp_hdr->type == ICMP_ECHOREPLY) {
-	    double rtt = (end.tv_sec - start.tv_sec) * 1000.0 + (double)(end.tv_usec - start.tv_usec) / 1000.0;
-
-	    if (!(args->flags & OPT_QUIET))
-		    print_response_infos(&ping->response, ret_rcv, rtt);
-
-	    // Update RTT stats
-	    if (rtt < ping->rtt_min || ping->rtt_min == 0.0)
-		    ping->rtt_min = rtt;
-	    if (rtt > ping->rtt_max)
-		    ping->rtt_max = rtt;
-	    ping->rtt_sum += rtt;
-	    ping->rtt_sum_sqr += rtt * rtt;
-    } 
-    else {
-	    print_errors(ping, ret_rcv, args->flags);
-	    return -1;
+    if (ping->response.icmp_hdr->un.echo.id == (getpid() & 0xFFFF)) {
+        if (ping->response.icmp_hdr->type == ICMP_ECHOREPLY) {
+            double rtt = (end.tv_sec - start.tv_sec) * 1000.0 + (double)(end.tv_usec - start.tv_usec) / 1000.0;
+    
+            if (!(args->flags & OPT_QUIET))
+                print_response_infos(&ping->response, ret_rcv, rtt);
+    
+            // Update RTT stats
+            if (rtt < ping->rtt_min || ping->rtt_min == 0.0)
+                ping->rtt_min = rtt;
+            if (rtt > ping->rtt_max)
+                ping->rtt_max = rtt;
+            ping->rtt_sum += rtt;
+            ping->rtt_sum_sqr += rtt * rtt;
+        } 
+        else {
+            print_errors(ping, ret_rcv, args->flags);
+            return -1;
+        }
     }
     return 0;
 }
