@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:23 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/05 11:17:08 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/12 13:35:59 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <netinet/ip_icmp.h> // hints
+#include <netinet/ip_icmp.h> // hints and headers
 #include <sys/time.h> // timeval
 #include <netdb.h>
 #include <sys/select.h>
@@ -37,7 +37,7 @@
 #include <math.h>
 
 // ERRORS MSG
-# define E_NOT_SUDO          "ft_ping: Are you sudo...?"
+# define E_NOT_SUDO          "ft_ping: are you sudo...?"
 # define E_MISSING_DEST      "ft_ping: missing host operand"
 # define E_BAD_DEST          "ft_ping: unknown host"
 # define E_MAX_DEST          "ft_ping: only one destination needed"
@@ -49,15 +49,15 @@
 # define E_SOCK_ERROR        "ft_ping: 'socket()' error"
 # define E_SETSOCKOPT_ERROR  "ft_ping: 'setsockopt()' error"
 # define E_INTERNAL_ERROR    "ft_ping: internal error"
-# define E_TRY_HELP          "\nTry 'ft_ping -?', 'ft_ping --help' or 'ft_ping --usage' for more information"
+# define E_TRY_HELP          "\nTry 'ft_ping -?', 'ft_ping --help' or 'ft_ping --usage' for more information."
 
 // BITWISE FLAGS FOR OPTIONS
-# define OPT_COUNT      0b1
-# define OPT_TTL        0b10
-# define OPT_VERBOSE    0b100
-# define OPT_LINGER     0b1000
-# define OPT_INTERVAL   0b10000
-# define OPT_QUIET      0b100000
+#define OPT_COUNT      (1 << 0) // Thanks aweaver
+#define OPT_TTL        (1 << 1)
+#define OPT_VERBOSE    (1 << 2)
+#define OPT_LINGER     (1 << 3)
+#define OPT_INTERVAL   (1 << 4)
+#define OPT_QUIET      (1 << 5)
 
 // FIXED SIZE
 # define ICMP_HDR_SIZE  8

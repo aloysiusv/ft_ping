@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 11:06:43 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/05 11:25:58 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/12 12:55:45 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ static t_packet init_packet(int i) {
     memset(&packet, 0, sizeof(packet));
     packet.type = ICMP_ECHO;
     packet.code = 0;
-    packet.id = ntohs(getpid() & 0xFFFF); // Making sure it fits in 16-bits range
+    packet.id = getpid() & 0xFFFF; // Making sure it fits in 16-bits range
     packet.seq = i;
     packet.checksum = checksum(&packet, sizeof(packet));
     return packet;

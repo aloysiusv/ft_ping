@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 10:50:43 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/03 17:47:45 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/12 13:35:08 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ void print_errors(t_ping *ping, const int bytes,const int flags) {
 	
 	if (rsp->icmp_hdr->type == ICMP_TIME_EXCEEDED)
 		printf("%d bytes from %s: Time to live exceeded\n", bytes - rsp->ip_hdr_len, inet_ntoa((struct in_addr){rsp->ip_hdr->saddr}));
-	else if (rsp->icmp_hdr->type == ICMP_DEST_UNREACH)
+	else if (rsp->icmp_hdr->type == ICMP_DEST_UNREACH) // Didn't bother to handle specific sub-codes :/
 		printf("%d bytes from %s: Destination Host Unreachable\n", bytes - rsp->ip_hdr_len, inet_ntoa((struct in_addr){rsp->ip_hdr->saddr}));
 	
 	if (flags & OPT_VERBOSE) {
