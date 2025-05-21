@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 10:50:43 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/12 13:35:08 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/21 12:57:00 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,11 @@ void print_help() {
 void print_start_infos(const  t_parser *args, const t_ping *ping) {
 
 	if (args->flags & OPT_VERBOSE) {
-		int packet_id = getpid() & 0xFFFF;
-		printf("PING %s (%s): %d data bytes, id 0x%x = %d\n", args->dest, ping->ip_dest, PAYLOAD_SIZE, packet_id, packet_id);
+		int pid = getpid() & 0xFFFF;
+		fprintf(stdout, "PING %s (%s): %d data bytes, id 0x%x = %d\n", args->dest, ping->ip_dest, PAYLOAD_SIZE, pid, pid);
 	}
 	else
-		printf("PING %s (%s): %d data bytes\n", args->dest, ping->ip_dest, PAYLOAD_SIZE);
+		fprintf(stdout, "PING %s (%s): %d data bytes\n", args->dest, ping->ip_dest, PAYLOAD_SIZE);
 }
 
 void print_response_infos(const t_response *rsp, const int bytes, const double rtt) {
@@ -41,7 +41,7 @@ void print_response_infos(const t_response *rsp, const int bytes, const double r
 	char ip_addr[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &rsp->ip_hdr->saddr, ip_addr, sizeof(ip_addr));
 
-    printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n",
+    fprintf(stdout, "%d bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n",
         bytes - rsp->ip_hdr_len,
         ip_addr,
         rsp->icmp_hdr->un.echo.sequence,
@@ -55,9 +55,9 @@ void print_errors(t_ping *ping, const int bytes,const int flags) {
 	t_response *rsp = &ping->response;
 	
 	if (rsp->icmp_hdr->type == ICMP_TIME_EXCEEDED)
-		printf("%d bytes from %s: Time to live exceeded\n", bytes - rsp->ip_hdr_len, inet_ntoa((struct in_addr){rsp->ip_hdr->saddr}));
+		fprintf(stdout, "%d bytes from %s: Time to live exceeded\n", bytes - rsp->ip_hdr_len, inet_ntoa((struct in_addr){rsp->ip_hdr->saddr}));
 	else if (rsp->icmp_hdr->type == ICMP_DEST_UNREACH) // Didn't bother to handle specific sub-codes :/
-		printf("%d bytes from %s: Destination Host Unreachable\n", bytes - rsp->ip_hdr_len, inet_ntoa((struct in_addr){rsp->ip_hdr->saddr}));
+		fprintf(stdout, "%d bytes from %s: Destination Host Unreachable\n", bytes - rsp->ip_hdr_len, inet_ntoa((struct in_addr){rsp->ip_hdr->saddr}));
 	
 	if (flags & OPT_VERBOSE) {
 		// Parse the second IP header (you get two when getting an error)
@@ -74,13 +74,13 @@ void print_errors(t_ping *ping, const int bytes,const int flags) {
 			inet_ntop(AF_INET, &inner_ip->saddr, src, sizeof(src));
 			inet_ntop(AF_INET, &inner_ip->daddr, dst, sizeof(dst));
 
-			printf("IP Hdr Dump:\n");
+			fprintf(stdout, "IP Hdr Dump:\n");
 			for (int i = 0; i < inner_ip_len; i += 2)
-				printf(" %02x%02x ", buf[i], buf[i + 1]);
-			printf("\n");
+				fprintf(stdout, " %02x%02x ", buf[i], buf[i + 1]);
+			fprintf(stdout, "\n");
 
-			printf("Vr HL TOS  Len   ID Flg  off TTL Pro  cks      Src	Dst	Data\n");
-			printf(" %x  %x  %02x %04x %04x   %x %04x  %02x  %02d %04x %s  %s\n",
+			fprintf(stdout, "Vr HL TOS  Len   ID Flg  off TTL Pro  cks      Src	Dst	Data\n");
+			fprintf(stdout, " %x  %x  %02x %04x %04x   %x %04x  %02x  %02d %04x %s  %s\n",
 				inner_ip->version,
 				inner_ip->ihl,
 				inner_ip->tos,
@@ -94,7 +94,7 @@ void print_errors(t_ping *ping, const int bytes,const int flags) {
 				src,
 				dst
 			);
-			printf("ICMP: type %d, code %d, size %d, id 0x%04x, seq 0x%04x\n",
+			fprintf(stdout, "ICMP: type %d, code %d, size %d, id 0x%04x, seq 0x%04x\n",
 				ping->packet.type,
 				ping->packet.code,
 				PACKET_SIZE,
@@ -112,8 +112,8 @@ void print_end_infos(const t_ping *ping, char *dest) {
 	double  stddev = sqrt((ping->rtt_sum_sqr / total_packets) - pow(mean, 2));
 	int     loss = ping->packets_lost / total_packets * 100;
 
-	printf("--- %s ft_ping statistics ---\n", dest);
-	printf("%d packets transmitted, %d packets received, %d%% packet loss\n", total_packets, ping->packets_sent, loss);
+	fprintf(stdout, "--- %s ft_ping statistics ---\n", dest);
+	fprintf(stdout, "%d packets transmitted, %d packets received, %d%% packet loss\n", total_packets, ping->packets_sent, loss);
 	if (loss != 100)
-		printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n",ping->rtt_min, mean, ping->rtt_max, stddev);
+		fprintf(stdout, "round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n",ping->rtt_min, mean, ping->rtt_max, stddev);
 }

@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:40:23 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/12 13:35:59 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/20 19:48:31 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,7 +100,7 @@ typedef struct {
     int                 sockfd;
     char                *ip_dest;
     struct addrinfo		*resolved;
-    
+
     // Stats to print
     int                 packets_lost;
     int                 packets_sent;

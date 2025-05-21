@@ -6,14 +6,14 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 10:50:35 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/12 18:16:23 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/21 13:01:06 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
 
 static void parse_headers(t_response *rsp) {
-        
+    
     // Parse IP and ICMP header
     rsp->ip_hdr = (struct iphdr *)rsp->buffer;
     rsp->ip_hdr_len = rsp->ip_hdr->ihl * 4;
@@ -32,10 +32,10 @@ static int receive_pong(int sockfd, t_response *rsp) {
 }
 
 static int send_ping(t_ping *ping, struct addrinfo *resolved, int linger) {
-
+    
     if (sendto(ping->sockfd, &ping->packet, sizeof(ping->packet), 0, resolved->ai_addr, resolved->ai_addrlen) < 0)
-        return -1;
-   
+    return -1;
+    
     // Init fds
     fd_set readfds;
     FD_ZERO(&readfds);
@@ -62,16 +62,15 @@ int play_ping_pong(t_parser *args, t_ping *ping) {
     if (ret_rcv <= 0)
         return -1;
     gettimeofday(&end, NULL);
-
+    
     // Check if we have the "success" header
     parse_headers(&ping->response);
-    if (ping->response.icmp_hdr->un.echo.id == (getpid() & 0xFFFF)) {
-        if (ping->response.icmp_hdr->type == ICMP_ECHOREPLY) {
+    if (ping->response.icmp_hdr->type == ICMP_ECHOREPLY && ping->response.icmp_hdr->un.echo.id == (getpid() & 0xFFFF)) { // Avoid polluting parallel ping sessions
             double rtt = (end.tv_sec - start.tv_sec) * 1000.0 + (double)(end.tv_usec - start.tv_usec) / 1000.0;
-    
+            
             if (!(args->flags & OPT_QUIET))
                 print_response_infos(&ping->response, ret_rcv, rtt);
-    
+            
             // Update RTT stats
             if (rtt < ping->rtt_min || ping->rtt_min == 0.0)
                 ping->rtt_min = rtt;
@@ -79,11 +78,12 @@ int play_ping_pong(t_parser *args, t_ping *ping) {
                 ping->rtt_max = rtt;
             ping->rtt_sum += rtt;
             ping->rtt_sum_sqr += rtt * rtt;
-        } 
-        else {
-            print_errors(ping, ret_rcv, args->flags);
-            return -1;
-        }
     }
+    else if (ping->response.icmp_hdr->un.echo.id == 0) {
+        print_errors(ping, ret_rcv, args->flags);
+        return -1;
+    }
+    else
+        return -2;
     return 0;
 }

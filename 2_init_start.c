@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 11:06:43 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/12 18:23:25 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/21 13:00:52 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 extern volatile sig_atomic_t g_stop;
 
-uint16_t checksum(void *ptr, int len)
+static uint16_t checksum(void *ptr, int len)
 {
     uint16_t* data = ptr;
     uint32_t  sum = 0;
@@ -85,6 +85,7 @@ static int init_socket(t_parser *args) {
 
 void start_ping(t_parser *args, t_ping *ping) {
     
+    int ret = 0;
     // Preparing socket and dest address
     ping->sockfd = init_socket(args);
     ping->resolved = resolve_addr(args->dest, ping->sockfd);
@@ -94,9 +95,10 @@ void start_ping(t_parser *args, t_ping *ping) {
     // Main loop
     for (int i = 0; i != args->packet_count; i++) {
         ping->packet = init_packet(i);
-        if (play_ping_pong(args, ping) == -1)
+        ret = play_ping_pong(args, ping); 
+        if (ret == -1)
             ping->packets_lost++;
-        else
+        else if (ret == 0)
             ping->packets_sent++;
         sleep(args->interval);
         if (g_stop == 1)
