@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 10:50:35 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/21 13:01:06 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/21 13:07:35 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,8 +63,8 @@ int play_ping_pong(t_parser *args, t_ping *ping) {
         return -1;
     gettimeofday(&end, NULL);
     
-    // Check if we have the "success" header
     parse_headers(&ping->response);
+    // Check if we have the "success" header
     if (ping->response.icmp_hdr->type == ICMP_ECHOREPLY && ping->response.icmp_hdr->un.echo.id == (getpid() & 0xFFFF)) { // Avoid polluting parallel ping sessions
             double rtt = (end.tv_sec - start.tv_sec) * 1000.0 + (double)(end.tv_usec - start.tv_usec) / 1000.0;
             

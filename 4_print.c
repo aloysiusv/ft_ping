@@ -6,7 +6,7 @@
 /*   By: lrandria <lrandria@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 10:50:43 by lrandria          #+#    #+#             */
-/*   Updated: 2025/05/21 12:57:00 by lrandria         ###   ########.fr       */
+/*   Updated: 2025/05/21 13:17:08 by lrandria         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,43 +54,46 @@ void print_errors(t_ping *ping, const int bytes,const int flags) {
 
 	t_response *rsp = &ping->response;
 	
+	char rsp_saddr[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &rsp->ip_hdr->saddr, rsp_saddr, sizeof(rsp_saddr));
+	
 	if (rsp->icmp_hdr->type == ICMP_TIME_EXCEEDED)
-		fprintf(stdout, "%d bytes from %s: Time to live exceeded\n", bytes - rsp->ip_hdr_len, inet_ntoa((struct in_addr){rsp->ip_hdr->saddr}));
+	fprintf(stdout, "%d bytes from %s: Time to live exceeded\n", bytes - rsp->ip_hdr_len, rsp_saddr);
 	else if (rsp->icmp_hdr->type == ICMP_DEST_UNREACH) // Didn't bother to handle specific sub-codes :/
-		fprintf(stdout, "%d bytes from %s: Destination Host Unreachable\n", bytes - rsp->ip_hdr_len, inet_ntoa((struct in_addr){rsp->ip_hdr->saddr}));
+	fprintf(stdout, "%d bytes from %s: Destination Host Unreachable\n", bytes - rsp->ip_hdr_len, rsp_saddr);
 	
 	if (flags & OPT_VERBOSE) {
 		// Parse the second IP header (you get two when getting an error)
-		struct iphdr *inner_ip = (struct iphdr *)(rsp->icmp_hdr + 1);
-
+		struct iphdr *copied_iphdr = (struct iphdr *)(rsp->icmp_hdr + 1);
+		
 		// Check response size, in case it's a bad header
-		if ((uint8_t *)inner_ip - (uint8_t *)rsp->buffer + sizeof(struct iphdr) <= RESPONSE_SIZE) {
-			const uint8_t  *buf = (const uint8_t *)inner_ip;
-			int            inner_ip_len = inner_ip->ihl * 4;
+		if ((uint8_t *)copied_iphdr - (uint8_t *)rsp->buffer + sizeof(struct iphdr) <= RESPONSE_SIZE) {
+			const uint8_t  *buf = (const uint8_t *)copied_iphdr;
+			int            copied_iphdr_len = copied_iphdr->ihl * 4;
 			
 			// Get src and dst properly
 			char src[INET_ADDRSTRLEN];
 			char dst[INET_ADDRSTRLEN];
-			inet_ntop(AF_INET, &inner_ip->saddr, src, sizeof(src));
-			inet_ntop(AF_INET, &inner_ip->daddr, dst, sizeof(dst));
+			inet_ntop(AF_INET, &copied_iphdr->saddr, src, sizeof(src));
+			inet_ntop(AF_INET, &copied_iphdr->daddr, dst, sizeof(dst));
 
 			fprintf(stdout, "IP Hdr Dump:\n");
-			for (int i = 0; i < inner_ip_len; i += 2)
+			for (int i = 0; i < copied_iphdr_len; i += 2)
 				fprintf(stdout, " %02x%02x ", buf[i], buf[i + 1]);
 			fprintf(stdout, "\n");
 
 			fprintf(stdout, "Vr HL TOS  Len   ID Flg  off TTL Pro  cks      Src	Dst	Data\n");
 			fprintf(stdout, " %x  %x  %02x %04x %04x   %x %04x  %02x  %02d %04x %s  %s\n",
-				inner_ip->version,
-				inner_ip->ihl,
-				inner_ip->tos,
-				ntohs(inner_ip->tot_len),
-				ntohs(inner_ip->id),
-				ntohs(inner_ip->frag_off) >> 13,
-				(ntohs(inner_ip->frag_off) & 0x1FFF),
-				inner_ip->ttl,
-				inner_ip->protocol,
-				ntohs(inner_ip->check),
+				copied_iphdr->version,
+				copied_iphdr->ihl,
+				copied_iphdr->tos,
+				ntohs(copied_iphdr->tot_len),
+				ntohs(copied_iphdr->id),
+				ntohs(copied_iphdr->frag_off) >> 13,
+				(ntohs(copied_iphdr->frag_off) & 0x1FFF),
+				copied_iphdr->ttl,
+				copied_iphdr->protocol,
+				ntohs(copied_iphdr->check),
 				src,
 				dst
 			);
